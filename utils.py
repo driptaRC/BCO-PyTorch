@@ -42,11 +42,11 @@ def get_action_labels(inv_model, state_trajs, env_type):
 		for idx in range(len(state_traj)-1):
 			s = state_traj[idx]
 			s_prime = state_traj[idx+1]
-			a = inv_model(torch.from_numpy(s).float(), torch.from_numpy(s_prime).float())
+			a = inv_model(torch.from_numpy(s).unsqueeze(0).float(), torch.from_numpy(s_prime).unsqueeze(0).float())
 			if env_type == 'continuous':
-				traj.append([s, a.numpy()])
+				traj.append([s, a.detach().numpy()])
 			else:
-				a = np.max(a.numpy())
+				a = np.max(a.detach().numpy())
 				traj.append([s, a])
 		trajs.append(traj)
 	return trajs
