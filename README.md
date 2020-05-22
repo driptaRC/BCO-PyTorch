@@ -1,4 +1,7 @@
 # BCO-PyTorch
-Unofficial PyTorch implementation of the paper 'Behavioral Cloning from Observation'. 
+PyTorch implementation of the paper *Behavioral Cloning from Observation*. 
 
-(In Progress)
+## Dependencies
+- Python 3.7
+- Gym 0.12.1
+- MuJoCo 1.5.0
