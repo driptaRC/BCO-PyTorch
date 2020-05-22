@@ -1,5 +1,6 @@
 import gym
 import torch
+import numpy as np
 from torch.distributions import Normal
 from torch.distributions import Categorical
 
@@ -17,25 +18,39 @@ def select_action_discrete(state, policy):
 	action = pi.sample()
 	return action.numpy()
 
-def gen_inv_samples(env, policy, num_samples, env_type):
+def gen_inv_samples(env, policy, num_samples, env_type, use_policy):
 	count = 0
 	transitions = []
 	s = env.reset()
+	t = 0
 	while count < num_samples:
 		if env_type == 'continuous':
-			a = select_action_continuous(s, policy)
+			if use_policy:
+				a = select_action_continuous(s, policy)
+			else:
+				a = env.action_space.sample()
 		else:
 			a = select_action_discrete(s, policy)
 		s_prime, _, done, _ = env.step(a)
 		transitions.append([s, a, s_prime])
 		count += 1
-		if done == True:
+		t += 1
+		if done == True or t>1000:
 			s = env.reset()
+			t = 0
 		else:
 			s = s_prime
 	return transitions
 
-def get_action_labels(inv_model, state_trajs, env_type):
+def get_action_labels(inv_model, states, env_type):
+	state_trajs = []
+	state_traj_ep = []
+	for i in range(len(states)):
+		if (i+1)%50 == 0:
+			state_trajs.append(state_traj_ep)
+			state_traj_ep = []
+		else:
+			state_traj_ep.append(states[i])
 	trajs = []
 	for state_traj in state_trajs:
 		traj = []

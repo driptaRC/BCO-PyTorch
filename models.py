@@ -12,9 +12,9 @@ class policy_continuous(nn.Module):
 
 	def forward(self, x):
 		x = self.linear_1(x)
-		x = F.leaky_relu(x, 0.01)
+		x = F.leaky_relu(x, 0.001)
 		x = self.linear_2(x)
-		x = F.leaky_relu(x, 0.01)
+		x = F.leaky_relu(x, 0.001)
 		x_m = self.linear_3_m(x)
 		x_v = self.linear_3_v(x)
 		return x_m, x_v
@@ -45,9 +45,9 @@ class inv_dynamics_continuous(nn.Module):
 	def forward(self, s, s_prime):
 		x = torch.cat([s, s_prime], dim=1)
 		x = self.linear_1(x)
-		x = F.leaky_relu(x, 0.01)
+		x = F.leaky_relu(x, 0.001)
 		x = self.linear_2(x)
-		x = F.leaky_relu(x, 0.01)
+		x = F.leaky_relu(x, 0.001)
 		x = self.linear_3(x)
 		return x
 

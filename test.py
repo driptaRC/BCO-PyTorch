@@ -2,6 +2,8 @@ import torch
 import gym
 import pickle
 import numpy as np
+import os
+import argparse
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.distributions import Normal
@@ -9,47 +11,46 @@ from models import *
 from utils import *
 from dataset import *
 
-ENV_NAME = 'Ant-v2'
-policy = torch.load('ant_policy.pt')
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--model_path', type=str)
+parser.add_argument('--env', type=str)
+parser.add_argument('--runs', type=int, default=10)
+parser.add_argument('--render', action='store_true')
+args = parser.parse_args()
+
+
+
+ENV_NAME = args.env
+policy = torch.load(os.path.join(args.model_path,ENV_NAME+'.pt'))
+policy.cpu()
 env = gym.make(ENV_NAME)
+
+max_steps = env.spec.timestep_limit
 
 
 ### EVALUATE POLICY
-R = 0
-policy.cpu()
-obs = env.reset()
-t = 0
-episode = 0
-while episode < 10:
-    obs = torch.from_numpy(obs).float()
-    a_mu, a_sigma = policy(obs)
-    env.render()
-    a = Normal(loc=a_mu, scale=a_sigma).sample()
-    next_obs, reward, done, _ = env.step(a.detach().numpy())
-    R += reward
-    t += 1
-    if done or t > 5000:
-        obs = env.reset()
-        episode += 1
-        t = 0
-    obs = next_obs
 
-print(R/10)
+returns  = []
+for i in range(args.runs):
+    print('iter', i)
+    obs = env.reset()
+    done = False
+    totalr = 0.
+    steps = 0
+    while not done:
+        a_mu, a_sigma = policy(torch.from_numpy(obs).float())
+        a = Normal(loc=a_mu, scale=a_sigma).sample()
+        obs, r, done, _ = env.step(a.detach().numpy())
+        if args.render:
+            env.render()
+        totalr += r
+        steps += 1
+        if steps % 100 == 0: print("%i/%i"%(steps, max_steps))
+        if steps >= max_steps:
+            break
+    returns.append(totalr)
 
-## RANDOM POLICY
-R = 0
-obs = env.reset()
-t = 0
-episode = 0
-while episode < 10:
-    a = env.action_space.sample()
-    next_obs, reward, done, _ = env.step(a)
-    R += reward
-    t += 1
-    if done or t > 5000:
-        obs = env.reset()
-        episode += 1
-        t = 0
-    obs = next_obs
-
-print(R/10)
+print('returns', returns)
+print('mean return', np.mean(returns))
+print('std of return', np.std(returns))

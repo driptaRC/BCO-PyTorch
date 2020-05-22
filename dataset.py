@@ -21,7 +21,7 @@ class imitation_dataset(Dataset):
         for traj in trajs:
             for sample in traj:
                 s, a = sample
-                self.data.append([s, a])
+                self.data.append([s, a[0]])
     
     def __len__(self):
         return len(self.data)
